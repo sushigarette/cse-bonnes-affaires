@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Building2, FileText, Gift, Settings, LogIn, LogOut, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -11,17 +11,50 @@ const Header = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const navItems = [
-    { path: "/", label: "Accueil", icon: Building2 },
-    { path: "/articles", label: "Articles", icon: FileText },
-    { path: "/promos", label: "Codes Promo", icon: Gift },
-    { path: "/admin", label: "Administration", icon: Settings },
-  ];
+  const getNavItems = () => {
+    const items = [
+      { path: "/", label: "Accueil", icon: Building2 },
+      { path: "/articles", label: "Articles", icon: FileText },
+      { path: "/promos", label: "Codes Promo", icon: Gift },
+    ];
+
+    // Ajouter Administration seulement si l'utilisateur est admin
+    if (isAdmin) {
+      items.push({ path: "/admin", label: "Administration", icon: Settings });
+    }
+
+    return items;
+  };
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          
+          setIsAdmin(profile?.role === 'admin');
+        } catch (error) {
+          console.error('Erreur lors de la vérification du rôle:', error);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   return (
     <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -38,7 +71,7 @@ const Header = () => {
           </div>
 
           <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => {
+            {getNavItems().map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
               
