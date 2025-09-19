@@ -1,67 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ArticleCard from "@/components/ArticleCard";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Loader2 } from "lucide-react";
+import { getArticles, Article } from "@/lib/database";
 
 const Articles = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Données d'exemple - à remplacer par des données réelles
-  const articles = [
-    {
-      title: "Nouvelle convention collective signée",
-      content: "Une nouvelle convention collective a été signée avec la direction, apportant de nombreux avantages pour les salariés. Cette convention améliore les conditions de travail, les congés payés et les primes...",
-      author: "Comité CSE",
-      date: "15 Sept 2024",
-      category: "Social",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Organisation de la soirée de fin d'année",
-      content: "Le CSE organise la soirée de fin d'année pour tous les collaborateurs. L'événement aura lieu le 15 décembre au Grand Hôtel. Inscription obligatoire avant le 30 septembre...",
-      author: "Bureau CSE",
-      date: "12 Sept 2024",
-      category: "Événement",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Nouveaux horaires de la cantine d'entreprise",
-      content: "À partir du 1er octobre, la cantine d'entreprise élargit ses horaires d'ouverture pour mieux s'adapter aux besoins des équipes. Service continu de 11h30 à 14h30...",
-      author: "Service RH",
-      date: "10 Sept 2024",
-      category: "Pratique",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Programme de formation continue 2024",
-      content: "Découvrez le nouveau programme de formation continue proposé par l'entreprise. Plus de 50 formations disponibles dans différents domaines : management, technique, langues...",
-      author: "Formation RH",
-      date: "08 Sept 2024",
-      category: "Formation",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Télétravail : nouvelles modalités",
-      content: "Suite aux négociations avec le CSE, de nouvelles modalités de télétravail entrent en vigueur. Jusqu'à 3 jours par semaine selon les postes et avec accord du manager...",
-      author: "Direction RH",
-      date: "05 Sept 2024",
-      category: "Social",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Journée portes ouvertes famille",
-      content: "Le CSE organise une journée portes ouvertes le 20 octobre pour permettre aux familles de découvrir l'entreprise. Visite des locaux, démonstrations et animations prévues...",
-      author: "Comité CSE",
-      date: "03 Sept 2024",
-      category: "Événement",
-      image: "/placeholder.svg"
+  useEffect(() => {
+    loadArticles();
+  }, []);
+
+  const loadArticles = async () => {
+    try {
+      const articlesData = await getArticles();
+      setArticles(articlesData);
+      
+      // Extraire les catégories uniques
+      const uniqueCategories = [...new Set(articlesData.map(article => article.category))]
+        .filter(category => category && category.trim() !== "");
+      setCategories(uniqueCategories.sort());
+    } catch (error) {
+      console.error('Erreur lors du chargement des articles:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const categories = ["all", "Social", "Événement", "Pratique", "Formation"];
 
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -101,11 +72,13 @@ const Articles = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
-                {categories.slice(1).map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
+                {categories
+                  .filter(category => category && category.trim() !== "")
+                  .map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -120,13 +93,30 @@ const Articles = () => {
 
         {/* Articles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredArticles.map((article, index) => (
-            <ArticleCard
-              key={index}
-              {...article}
-              onRead={() => console.log('Lire article:', article.title)}
-            />
-          ))}
+          {loading ? (
+            <div className="col-span-full flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : filteredArticles.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">Aucun article trouvé</p>
+            </div>
+          ) : (
+            filteredArticles.map((article) => (
+              <ArticleCard
+                key={article.id}
+                id={article.id}
+                title={article.title}
+                content={article.content}
+                author={article.author}
+                date={new Date(article.created_at).toLocaleDateString()}
+                category={article.category}
+                image={article.image_url || "/placeholder.svg"}
+                articleUrl={article.article_url}
+                onRead={() => console.log('Lire article:', article.title)}
+              />
+            ))
+          )}
         </div>
 
         {/* Empty state */}

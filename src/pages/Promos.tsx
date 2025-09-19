@@ -1,99 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PromoCard from "@/components/PromoCard";
-import { Search, Filter, Percent } from "lucide-react";
+import { Search, Filter, Percent, Loader2 } from "lucide-react";
+import { getPromos, Promo } from "@/lib/database";
+import { formatDiscount } from "@/lib/formatDiscount";
 
 const Promos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [promos, setPromos] = useState<Promo[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Données d'exemple - à remplacer par des données réelles
-  const promos = [
-    {
-      title: "Réduction cinéma UGC",
-      description: "Bénéficiez de 30% de réduction sur vos places de cinéma UGC dans tous les cinémas de France",
-      code: "CSE2024UGC",
-      discount: "-30%",
-      validUntil: "31/12/2024",
-      partner: "UGC Cinémas",
-      category: "Loisirs",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Vacances Center Parcs",
-      description: "Jusqu'à 25% de réduction sur vos séjours Center Parcs en famille, week-ends et vacances",
-      code: "CENTERPARCS25",
-      discount: "-25%",
-      validUntil: "28/02/2025",
-      partner: "Center Parcs",
-      category: "Vacances",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Carte restaurant Ticket Restaurant",
-      description: "15% de bonus sur votre carte Ticket Restaurant pour tous vos repas",
-      code: "RESTO15CSE",
-      discount: "+15%",
-      validUntil: "31/12/2024",
-      partner: "Edenred",
-      category: "Restauration",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Abonnement salle de sport",
-      description: "50% de réduction sur votre abonnement annuel dans les salles Basic Fit",
-      code: "BASICFIT50",
-      discount: "-50%",
-      validUntil: "15/11/2024",
-      partner: "Basic Fit",
-      category: "Sport",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Voyages SNCF Connect",
-      description: "20% de réduction sur tous vos billets de train avec SNCF Connect",
-      code: "SNCFCSE20",
-      discount: "-20%",
-      validUntil: "30/12/2024",
-      partner: "SNCF",
-      category: "Transport",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Spectacles Fnac",
-      description: "Tarif préférentiel sur tous les spectacles et concerts via Fnac Spectacles",
-      code: "FNACSPEC",
-      discount: "-35%",
-      validUntil: "31/01/2025",
-      partner: "Fnac",
-      category: "Culture",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Courses Carrefour",
-      description: "10% de réduction sur vos courses en ligne Carrefour avec livraison gratuite",
-      code: "CARREFOUR10",
-      discount: "-10%",
-      validUntil: "30/11/2024",
-      partner: "Carrefour",
-      category: "Alimentation",
-      image: "/placeholder.svg"
-    },
-    {
-      title: "Locations Europcar",
-      description: "Jusqu'à 40% de réduction sur vos locations de véhicules Europcar",
-      code: "EUROPCAR40",
-      discount: "-40%",
-      validUntil: "31/03/2025",
-      partner: "Europcar",
-      category: "Transport",
-      image: "/placeholder.svg"
+  useEffect(() => {
+    loadPromos();
+  }, []);
+
+
+  const loadPromos = async () => {
+    try {
+      const promosData = await getPromos();
+      setPromos(promosData);
+      
+      // Extraire les catégories uniques
+      const uniqueCategories = [...new Set(promosData.map(promo => promo.category))]
+        .filter(category => category && category.trim() !== "");
+      setCategories(uniqueCategories.sort());
+    } catch (error) {
+      console.error('Erreur lors du chargement des promos:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const categories = ["all", "Loisirs", "Vacances", "Restauration", "Sport", "Transport", "Culture", "Alimentation"];
 
   const filteredPromos = promos.filter(promo => {
     const matchesSearch = promo.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,11 +78,13 @@ const Promos = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
-                {categories.slice(1).map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
+                {categories
+                  .filter(category => category && category.trim() !== "")
+                  .map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -156,9 +99,30 @@ const Promos = () => {
 
         {/* Promos Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPromos.map((promo, index) => (
-            <PromoCard key={index} {...promo} />
-          ))}
+          {loading ? (
+            <div className="col-span-full flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : filteredPromos.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">Aucune offre trouvée</p>
+            </div>
+          ) : (
+            filteredPromos.map((promo) => (
+              <PromoCard
+                key={promo.id}
+                title={promo.title}
+                description={promo.description}
+                code={promo.code}
+                discount={formatDiscount(promo.discount)}
+                validUntil={new Date(promo.valid_until).toLocaleDateString()}
+                partner={promo.partner}
+                category={promo.category}
+                image={promo.image_url || "/placeholder.svg"}
+                websiteUrl={promo.website_url}
+              />
+            ))
+          )}
         </div>
 
         {/* Empty state */}

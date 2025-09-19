@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ArticleCard from "@/components/ArticleCard";
 import PromoCard from "@/components/PromoCard";
-import { ArrowRight, TrendingUp, Gift, FileText } from "lucide-react";
+import { ArrowRight, Gift, FileText, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getArticles, getPromos, Article, Promo } from "@/lib/database";
+import { formatDiscount } from "@/lib/formatDiscount";
 import heroOffice from "@/assets/hero-office.jpg";
 import meetingRoom from "@/assets/meeting-room.jpg";
 import companyEvent from "@/assets/company-event.jpg";
@@ -11,48 +14,31 @@ import cinemaPromo from "@/assets/cinema-promo.jpg";
 import centerparcsPromo from "@/assets/centerparcs-promo.jpg";
 
 const Home = () => {
-  // Données d'exemple - seront remplacées par des données réelles
-  const recentArticles = [
-    {
-      title: "Nouvelle convention collective signée",
-      content: "Une nouvelle convention collective a été signée avec la direction, apportant de nombreux avantages pour les salariés...",
-      author: "Comité CSE",
-      date: "15 Sept 2024",
-      category: "Social",
-      image: meetingRoom
-    },
-    {
-      title: "Organisation de la soirée de fin d'année",
-      content: "Le CSE organise la soirée de fin d'année pour tous les collaborateurs. Inscription obligatoire avant le 30 septembre...",
-      author: "Bureau CSE",
-      date: "12 Sept 2024",
-      category: "Événement",
-      image: companyEvent
-    }
-  ];
+  const [recentArticles, setRecentArticles] = useState<Article[]>([]);
+  const [recentPromos, setRecentPromos] = useState<Promo[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentPromos = [
-    {
-      title: "Réduction cinéma UGC",
-      description: "Bénéficiez de 30% de réduction sur vos places de cinéma UGC",
-      code: "CSE2024UGC",
-      discount: "-30%",
-      validUntil: "31/12/2024",
-      partner: "UGC Cinémas",
-      category: "Loisirs",
-      image: cinemaPromo
-    },
-    {
-      title: "Vacances Center Parcs",
-      description: "Jusqu'à 25% de réduction sur vos séjours Center Parcs en famille",
-      code: "CENTERPARCS25",
-      discount: "-25%",
-      validUntil: "28/02/2025",
-      partner: "Center Parcs",
-      category: "Vacances",
-      image: centerparcsPromo
+  useEffect(() => {
+    loadData();
+  }, []);
+
+
+  const loadData = async () => {
+    try {
+      const [articlesData, promosData] = await Promise.all([
+        getArticles(),
+        getPromos()
+      ]);
+
+      // Prendre les 2 premiers articles et promos
+      setRecentArticles(articlesData.slice(0, 2));
+      setRecentPromos(promosData.slice(0, 2));
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -60,7 +46,7 @@ const Home = () => {
       <section className="gradient-hero text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Bienvenue sur le portail CSE
+            Bienvenue sur MHCSE
           </h1>
           <p className="text-xl md:text-2xl mb-8 opacity-90 max-w-3xl mx-auto">
             Découvrez toutes les actualités, avantages et codes promo réservés aux collaborateurs
@@ -83,44 +69,6 @@ const Home = () => {
       </section>
 
       <div className="container mx-auto px-4 py-12">
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card className="text-center gradient-card border-0">
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-primary">24</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Articles publiés ce mois</p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center gradient-card border-0">
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 bg-success rounded-full flex items-center justify-center mx-auto mb-3">
-                <Gift className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-success">15</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Codes promo actifs</p>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center gradient-card border-0">
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 bg-warning rounded-full flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-warning">892</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Collaborateurs connectés</p>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Recent Articles */}
         <section className="mb-12">
@@ -135,13 +83,30 @@ const Home = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recentArticles.map((article, index) => (
-              <ArticleCard
-                key={index}
-                {...article}
-                onRead={() => console.log('Lire article:', article.title)}
-              />
-            ))}
+            {loading ? (
+              <div className="col-span-2 flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin" />
+              </div>
+            ) : recentArticles.length === 0 ? (
+              <div className="col-span-2 text-center py-8">
+                <p className="text-muted-foreground">Aucun article disponible</p>
+              </div>
+            ) : (
+              recentArticles.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  content={article.content}
+                  author={article.author}
+                  date={new Date(article.created_at).toLocaleDateString()}
+                  category={article.category}
+                  image={article.image_url || "/placeholder.svg"}
+                  articleUrl={article.article_url}
+                  onRead={() => console.log('Lire article:', article.title)}
+                />
+              ))
+            )}
           </div>
         </section>
 
@@ -158,9 +123,30 @@ const Home = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recentPromos.map((promo, index) => (
-              <PromoCard key={index} {...promo} />
-            ))}
+            {loading ? (
+              <div className="col-span-2 flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin" />
+              </div>
+            ) : recentPromos.length === 0 ? (
+              <div className="col-span-2 text-center py-8">
+                <p className="text-muted-foreground">Aucun code promo disponible</p>
+              </div>
+            ) : (
+              recentPromos.map((promo) => (
+                <PromoCard
+                  key={promo.id}
+                  title={promo.title}
+                  description={promo.description}
+                  code={promo.code}
+                  discount={formatDiscount(promo.discount)}
+                  validUntil={new Date(promo.valid_until).toLocaleDateString()}
+                  partner={promo.partner}
+                  category={promo.category}
+                  image={promo.image_url || "/placeholder.svg"}
+                  websiteUrl={promo.website_url}
+                />
+              ))
+            )}
           </div>
         </section>
       </div>

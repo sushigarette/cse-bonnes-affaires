@@ -1,8 +1,9 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Clock, Percent } from "lucide-react";
+import { Copy, ExternalLink, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatDiscount } from "@/lib/formatDiscount";
 
 interface PromoCardProps {
   title: string;
@@ -13,6 +14,7 @@ interface PromoCardProps {
   partner: string;
   category: string;
   image?: string;
+  websiteUrl?: string;
 }
 
 const PromoCard = ({
@@ -23,9 +25,19 @@ const PromoCard = ({
   validUntil,
   partner,
   category,
-  image
+  image,
+  websiteUrl
 }: PromoCardProps) => {
   const { toast } = useToast();
+
+  // Vérifier si le code promo se termine dans moins de 24 heures
+  const isExpiringSoon = () => {
+    const now = new Date();
+    const validUntilDate = new Date(validUntil);
+    const timeDiff = validUntilDate.getTime() - now.getTime();
+    const hoursLeft = timeDiff / (1000 * 3600);
+    return hoursLeft <= 24 && hoursLeft > 0;
+  };
 
   const copyCode = () => {
     navigator.clipboard.writeText(code);
@@ -35,14 +47,42 @@ const PromoCard = ({
     });
   };
 
+  const handleUsePromo = () => {
+    if (websiteUrl) {
+      // Ajouter https:// si le lien ne commence pas par un protocole
+      let url = websiteUrl.trim();
+      if (!url.match(/^https?:\/\//)) {
+        url = `https://${url}`;
+      }
+      
+      // Ouvrir le lien dans un nouvel onglet
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: "Lien non disponible",
+        description: "Aucun lien vers le site partenaire n'est disponible pour ce code promo.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
-    <Card className="card-elevated hover:shadow-lg transition-all duration-300 group relative overflow-hidden">
+    <Card className={`card-elevated hover:shadow-lg transition-all duration-300 group relative overflow-hidden ${
+      isExpiringSoon() ? 'ring-2 ring-red-200 dark:ring-red-800' : ''
+    }`}>
       <div className="absolute top-2 right-2 z-10">
         <Badge variant="success" className="bg-success text-success-foreground">
-          <Percent className="w-3 h-3 mr-1" />
-          {discount}
+          {formatDiscount(discount)}
         </Badge>
       </div>
+      
+      {isExpiringSoon() && (
+        <div className="absolute top-2 left-2 z-10">
+          <Badge variant="destructive" className="bg-red-600 text-white animate-pulse">
+            ⚠️ Expire bientôt
+          </Badge>
+        </div>
+      )}
 
       {image && (
         <div className="aspect-video overflow-hidden">
@@ -67,15 +107,28 @@ const PromoCard = ({
       </CardHeader>
 
       <CardContent className="pb-4">
-        <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed mb-3">
-          {description}
-        </p>
+        <div 
+          className="text-muted-foreground line-clamp-2 text-sm leading-relaxed mb-3 prose prose-sm max-w-none"
+          dangerouslySetInnerHTML={{ 
+            __html: description 
+          }}
+        />
         
-        <div className="bg-muted rounded-lg p-3 border-dashed border-2 border-border">
+        <div className={`rounded-lg p-3 border-dashed border-2 ${
+          isExpiringSoon() 
+            ? 'bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800' 
+            : 'bg-muted border-border'
+        }`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Code promo :</p>
-              <p className="font-mono font-bold text-lg text-primary">{code}</p>
+              <p className={`font-mono font-bold text-lg ${
+                isExpiringSoon() 
+                  ? 'text-red-600 dark:text-red-400' 
+                  : 'text-primary'
+              }`}>
+                {code}
+              </p>
             </div>
             <Button 
               variant="outline" 
@@ -90,15 +143,21 @@ const PromoCard = ({
       </CardContent>
 
       <CardFooter className="flex items-center justify-between pt-0">
-        <div className="flex items-center text-xs text-muted-foreground">
+        <div className={`flex items-center text-xs ${
+          isExpiringSoon() 
+            ? 'text-red-600 dark:text-red-400 font-medium' 
+            : 'text-muted-foreground'
+        }`}>
           <Clock className="w-3 h-3 mr-1" />
-          Valide jusqu'au {validUntil}
+          {isExpiringSoon() ? '⚠️ Expire bientôt - ' : ''}Valide jusqu'au {validUntil}
         </div>
         
         <Button 
           variant="ghost" 
           size="sm"
+          onClick={handleUsePromo}
           className="text-primary hover:text-primary-foreground hover:bg-primary"
+          disabled={!websiteUrl}
         >
           <ExternalLink className="w-4 h-4 mr-1" />
           Utiliser
