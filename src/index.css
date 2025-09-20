@@ -133,8 +133,29 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    @apply bg-background;
+    /* Empêche le fond jaune sur mobile */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+    /* Force le fond sur mobile */
+    background-color: hsl(var(--background)) !important;
+  }
+
+  /* Correction spécifique pour mobile */
+  @media (max-width: 768px) {
+    html, body {
+      background-color: hsl(var(--background)) !important;
+    }
+    
+    #root {
+      background-color: hsl(var(--background)) !important;
+    }
   }
 }
 
