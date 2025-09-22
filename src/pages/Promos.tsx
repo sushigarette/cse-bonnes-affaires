@@ -122,6 +122,7 @@ const Promos = () => {
                 image={promo.image_url || "/placeholder.svg"}
                 websiteUrl={promo.website_url}
                 documentUrl={promo.document_url}
+                documentTitle={promo.document_title}
                 onRead={() => console.log('Lire promo:', promo.title)}
               />
             ))

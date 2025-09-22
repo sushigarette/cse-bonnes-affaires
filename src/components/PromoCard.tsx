@@ -19,6 +19,7 @@ interface PromoCardProps {
   image?: string;
   websiteUrl?: string;
   documentUrl?: string;
+  documentTitle?: string;
   onRead?: () => void;
 }
 
@@ -34,6 +35,7 @@ const PromoCard = ({
   image,
   websiteUrl,
   documentUrl,
+  documentTitle,
   onRead
 }: PromoCardProps) => {
   const navigate = useNavigate();
@@ -174,7 +176,7 @@ const PromoCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between pt-0">
+      <CardFooter className="flex flex-col gap-3 pt-0">
         <div className={`flex items-center text-xs ${
           isExpiringSoon() 
             ? 'text-red-600 dark:text-red-400 font-medium' 
@@ -184,7 +186,7 @@ const PromoCard = ({
           {isExpiringSoon() ? '⚠️ Expire bientôt - ' : ''}Valide jusqu'au {validUntil}
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 justify-end">
           <Button 
             variant="ghost" 
             size="sm"
@@ -214,7 +216,7 @@ const PromoCard = ({
               className="text-primary hover:text-primary-foreground hover:bg-primary"
             >
               <FileText className="w-4 h-4 mr-1" />
-              Document
+              {documentTitle || "Document"}
             </Button>
           )}
         </div>

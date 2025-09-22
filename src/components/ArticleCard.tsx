@@ -16,6 +16,7 @@ interface ArticleCardProps {
   image?: string;
   articleUrl?: string;
   documentUrl?: string;
+  documentTitle?: string;
   onRead?: () => void;
 }
 
@@ -29,6 +30,7 @@ const ArticleCard = ({
   image,
   articleUrl,
   documentUrl,
+  documentTitle,
   onRead
 }: ArticleCardProps) => {
   const navigate = useNavigate();
@@ -145,7 +147,7 @@ const ArticleCard = ({
               className="text-primary hover:text-primary-foreground hover:bg-primary"
             >
               <FileText className="w-4 h-4 mr-1" />
-              Document
+              {documentTitle || "Document"}
             </Button>
           )}
         </div>

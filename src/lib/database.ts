@@ -9,6 +9,7 @@ export interface Article {
   image_url?: string
   article_url?: string
   document_url?: string
+  document_title?: string
   published: boolean
   created_at: string
   updated_at: string
@@ -28,6 +29,7 @@ export interface Promo {
   image_url?: string
   website_url?: string
   document_url?: string
+  document_title?: string
   active: boolean
   created_at: string
   updated_at: string

@@ -104,6 +104,7 @@ const Home = () => {
                   image={article.image_url || "/placeholder.svg"}
                   articleUrl={article.article_url}
                   documentUrl={article.document_url}
+                  documentTitle={article.document_title}
                   onRead={() => console.log('Lire article:', article.title)}
                 />
               ))
@@ -147,6 +148,7 @@ const Home = () => {
                   image={promo.image_url || "/placeholder.svg"}
                   websiteUrl={promo.website_url}
                   documentUrl={promo.document_url}
+                  documentTitle={promo.document_title}
                   onRead={() => console.log('Lire promo:', promo.title)}
                 />
               ))

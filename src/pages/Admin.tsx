@@ -35,7 +35,8 @@ const Admin = () => {
     author: "",
     image_url: "",
     article_url: "",
-    document_url: ""
+    document_url: "",
+    document_title: ""
   });
 
   const [promoForm, setPromoForm] = useState({
@@ -48,7 +49,8 @@ const Admin = () => {
     category: "",
     image_url: "",
     website_url: "",
-    document_url: ""
+    document_url: "",
+    document_title: ""
   });
 
   // Charger les données au montage du composant
@@ -109,6 +111,7 @@ const Admin = () => {
         image_url: articleForm.image_url || undefined,
         article_url: articleForm.article_url || undefined,
         document_url: articleForm.document_url || undefined,
+        document_title: articleForm.document_title || undefined,
         published: true
       });
 
@@ -117,7 +120,7 @@ const Admin = () => {
         description: "L'article a été publié avec succès.",
       });
       
-      setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "", document_url: "" });
+      setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "", document_url: "", document_title: "" });
       loadData(); // Recharger les données
     } catch (error) {
       toast({
@@ -146,6 +149,7 @@ const Admin = () => {
         image_url: promoForm.image_url || undefined,
         website_url: promoForm.website_url || undefined,
         document_url: promoForm.document_url || undefined,
+        document_title: promoForm.document_title || undefined,
         active: true
       });
 
@@ -154,7 +158,7 @@ const Admin = () => {
         description: "Le code promo a été ajouté avec succès.",
       });
       
-      setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "", document_url: "" });
+      setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "", document_url: "", document_title: "" });
       loadData(); // Recharger les données
     } catch (error) {
       toast({
@@ -227,7 +231,8 @@ const Admin = () => {
       author: article.author,
       image_url: article.image_url || "",
       article_url: article.article_url || "",
-      document_url: article.document_url || ""
+      document_url: article.document_url || "",
+      document_title: article.document_title || ""
     });
     setActiveTab("articles");
   };
@@ -244,7 +249,8 @@ const Admin = () => {
       category: promo.category,
       image_url: promo.image_url || "",
       website_url: promo.website_url || "",
-      document_url: promo.document_url || ""
+      document_url: promo.document_url || "",
+      document_title: promo.document_title || ""
     });
     setActiveTab("promos");
   };
@@ -252,8 +258,8 @@ const Admin = () => {
   const handleCancelEdit = () => {
     setEditingArticle(null);
     setEditingPromo(null);
-    setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "", document_url: "" });
-    setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "", document_url: "" });
+    setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "", document_url: "", document_title: "" });
+    setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "", document_url: "", document_title: "" });
   };
 
   const handleUpdateArticle = async (e: React.FormEvent) => {
@@ -275,7 +281,8 @@ const Admin = () => {
         author: articleForm.author,
         image_url: articleForm.image_url || undefined,
         article_url: articleForm.article_url || undefined,
-        document_url: articleForm.document_url || undefined
+        document_url: articleForm.document_url || undefined,
+        document_title: articleForm.document_title || undefined
       });
 
       toast({
@@ -318,7 +325,8 @@ const Admin = () => {
         category: promoForm.category,
         image_url: promoForm.image_url || undefined,
         website_url: promoForm.website_url || undefined,
-        document_url: promoForm.document_url || undefined
+        document_url: promoForm.document_url || undefined,
+        document_title: promoForm.document_title || undefined
       });
 
       toast({
@@ -473,9 +481,11 @@ const Admin = () => {
 
                     <div className="space-y-2">
                       <FileUpload
-                        onFileUploaded={(url) => setArticleForm({ ...articleForm, document_url: url })}
-                        onFileRemoved={() => setArticleForm({ ...articleForm, document_url: "" })}
+                        onFileUploaded={(url, title) => setArticleForm({ ...articleForm, document_url: url, document_title: title || "" })}
+                        onFileRemoved={() => setArticleForm({ ...articleForm, document_url: "", document_title: "" })}
+                        onTitleChange={(title) => setArticleForm({ ...articleForm, document_title: title })}
                         currentFile={articleForm.document_url}
+                        currentTitle={articleForm.document_title}
                         accept=".pdf"
                         maxSize={10}
                       />
@@ -613,9 +623,11 @@ const Admin = () => {
 
                     <div className="space-y-2">
                       <FileUpload
-                        onFileUploaded={(url) => setPromoForm({ ...promoForm, document_url: url })}
-                        onFileRemoved={() => setPromoForm({ ...promoForm, document_url: "" })}
+                        onFileUploaded={(url, title) => setPromoForm({ ...promoForm, document_url: url, document_title: title || "" })}
+                        onFileRemoved={() => setPromoForm({ ...promoForm, document_url: "", document_title: "" })}
+                        onTitleChange={(title) => setPromoForm({ ...promoForm, document_title: title })}
                         currentFile={promoForm.document_url}
+                        currentTitle={promoForm.document_title}
                         accept=".pdf"
                         maxSize={10}
                       />

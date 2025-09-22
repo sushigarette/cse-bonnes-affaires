@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
 interface FileUploadProps {
-  onFileUploaded: (url: string) => void;
+  onFileUploaded: (url: string, title?: string) => void;
   onFileRemoved: () => void;
+  onTitleChange?: (title: string) => void;
   currentFile?: string;
+  currentTitle?: string;
   accept?: string;
   maxSize?: number; // en MB
   className?: string;
@@ -18,15 +20,23 @@ interface FileUploadProps {
 const FileUpload = ({
   onFileUploaded,
   onFileRemoved,
+  onTitleChange,
   currentFile,
+  currentTitle,
   accept = ".pdf",
   maxSize = 10, // 10MB par défaut
   className = ""
 }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState(currentTitle || "");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Synchroniser le titre avec les changements externes
+  useEffect(() => {
+    setDocumentTitle(currentTitle || "");
+  }, [currentTitle]);
 
   const handleFileSelect = async (file: File) => {
     // Validation du type de fichier
@@ -71,7 +81,7 @@ const FileUpload = ({
         .from('documents')
         .getPublicUrl(filePath);
 
-      onFileUploaded(publicUrl);
+      onFileUploaded(publicUrl, documentTitle);
 
       toast({
         title: "Fichier uploadé !",
@@ -129,6 +139,7 @@ const FileUpload = ({
           .from('documents')
           .remove([filePath]);
 
+        setDocumentTitle("");
         onFileRemoved();
 
         toast({
@@ -151,15 +162,27 @@ const FileUpload = ({
   };
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <Label>Document PDF</Label>
+    <div className={`space-y-4 ${className}`}>
+      <div className="space-y-2">
+        <Label>Document PDF</Label>
+        <Input
+          type="text"
+          placeholder="Titre du document (optionnel)"
+          value={documentTitle}
+          onChange={(e) => {
+            setDocumentTitle(e.target.value);
+            onTitleChange?.(e.target.value);
+          }}
+          className="w-full"
+        />
+      </div>
       
       {currentFile ? (
         <div className="flex items-center justify-between p-4 bg-muted rounded-lg border">
           <div className="flex items-center gap-3">
             <FileText className="w-8 h-8 text-primary" />
             <div>
-              <p className="font-medium">Document PDF</p>
+              <p className="font-medium">{documentTitle || "Document PDF"}</p>
               <p className="text-sm text-muted-foreground">
                 Fichier uploadé avec succès
               </p>

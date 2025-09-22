@@ -143,7 +143,7 @@ const ArticleDetail = () => {
                 <div className="flex items-center gap-3">
                   <FileText className="w-8 h-8 text-primary" />
                   <div>
-                    <p className="font-medium">Document PDF</p>
+                    <p className="font-medium">{article.document_title || "Document PDF"}</p>
                     <p className="text-sm text-muted-foreground">Cliquez pour ouvrir le document</p>
                   </div>
                 </div>
