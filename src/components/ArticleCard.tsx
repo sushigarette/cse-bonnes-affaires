@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Eye, User, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { formatTextWithLineBreaks } from "@/lib/utils";
 
 interface ArticleCardProps {
   id: string;
@@ -84,7 +85,7 @@ const ArticleCard = ({
         <div 
           className="text-muted-foreground line-clamp-3 text-sm leading-relaxed prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{ 
-            __html: content.replace(/<[^>]*>/g, '').substring(0, 150) + '...'
+            __html: formatTextWithLineBreaks(content.replace(/<[^>]*>/g, '').substring(0, 150) + '...')
           }}
         />
       </CardContent>

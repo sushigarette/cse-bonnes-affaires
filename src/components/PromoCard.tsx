@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink, Clock, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDiscount } from "@/lib/formatDiscount";
+import { formatTextWithLineBreaks } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
 interface PromoCardProps {
@@ -123,7 +124,7 @@ const PromoCard = ({
         <div 
           className="text-muted-foreground line-clamp-2 text-sm leading-relaxed mb-3 prose prose-sm max-w-none"
           dangerouslySetInnerHTML={{ 
-            __html: description 
+            __html: formatTextWithLineBreaks(description)
           }}
         />
         

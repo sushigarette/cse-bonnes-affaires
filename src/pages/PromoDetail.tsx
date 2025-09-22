@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ExternalLink, Copy, Clock, Percent, Calendar, Building2, Tag } from "lucide-react";
 import { getPromoById, Promo, recordPromoUsage } from "@/lib/database";
 import { formatDiscount } from "@/lib/formatDiscount";
+import { formatTextWithLineBreaks } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -168,7 +169,7 @@ const PromoDetail = () => {
               <div 
                 className="text-foreground leading-relaxed"
                 dangerouslySetInnerHTML={{ 
-                  __html: promo.description 
+                  __html: formatTextWithLineBreaks(promo.description)
                 }}
               />
             </div>

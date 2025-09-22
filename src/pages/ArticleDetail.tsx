@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, User, Eye, Loader2 } from "lucide-react";
 import { getArticleById, Article } from "@/lib/database";
+import { formatTextWithLineBreaks } from "@/lib/utils";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -122,7 +123,7 @@ const ArticleDetail = () => {
             <div 
               className="text-foreground leading-relaxed prose prose-lg max-w-none"
               dangerouslySetInnerHTML={{ 
-                __html: article.content 
+                __html: formatTextWithLineBreaks(article.content)
               }}
             />
           </CardContent>
