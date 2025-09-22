@@ -121,6 +121,7 @@ const Promos = () => {
                 category={promo.category}
                 image={promo.image_url || "/placeholder.svg"}
                 websiteUrl={promo.website_url}
+                documentUrl={promo.document_url}
                 onRead={() => console.log('Lire promo:', promo.title)}
               />
             ))

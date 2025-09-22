@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, Eye, Loader2, FileText, ExternalLink } from "lucide-react";
 import { getArticleById, Article } from "@/lib/database";
 import { formatTextWithLineBreaks } from "@/lib/utils";
 
@@ -128,6 +128,42 @@ const ArticleDetail = () => {
             />
           </CardContent>
         </Card>
+
+        {/* Document associé */}
+        {article.document_url && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Document associé
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-medium">Document PDF</p>
+                    <p className="text-sm text-muted-foreground">Cliquez pour ouvrir le document</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    let url = article.document_url!.trim();
+                    if (!url.match(/^https?:\/\//)) {
+                      url = `https://${url}`;
+                    }
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Ouvrir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions */}
         <div className="mt-8 flex justify-center">

@@ -9,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Save, FileText, Gift, Calendar, User, Loader2, Trash2, Edit } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { getArticles, getPromos, createArticle, createPromo, updateArticle, updatePromo, deleteArticle, deletePromo, Article, Promo } from "@/lib/database";
+import { getArticles, getPromos, createArticle, createPromo, updateArticle, updatePromo, deleteArticle, deletePromo, deleteFileFromStorage, Article, Promo } from "@/lib/database";
 import { formatDiscount } from "@/lib/formatDiscount";
 import CategorySelect from "@/components/CategorySelect";
 import RichTextEditor from "@/components/RichTextEditor";
+import FileUpload from "@/components/FileUpload";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -32,7 +33,8 @@ const Admin = () => {
     category: "",
     author: "",
     image_url: "",
-    article_url: ""
+    article_url: "",
+    document_url: ""
   });
 
   const [promoForm, setPromoForm] = useState({
@@ -44,7 +46,8 @@ const Admin = () => {
     partner: "",
     category: "",
     image_url: "",
-    website_url: ""
+    website_url: "",
+    document_url: ""
   });
 
   // Charger les données au montage du composant
@@ -102,6 +105,7 @@ const Admin = () => {
         author: articleForm.author,
         image_url: articleForm.image_url || undefined,
         article_url: articleForm.article_url || undefined,
+        document_url: articleForm.document_url || undefined,
         published: true
       });
 
@@ -110,7 +114,7 @@ const Admin = () => {
         description: "L'article a été publié avec succès.",
       });
       
-      setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "" });
+      setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "", document_url: "" });
       loadData(); // Recharger les données
     } catch (error) {
       toast({
@@ -138,6 +142,7 @@ const Admin = () => {
         category: promoForm.category,
         image_url: promoForm.image_url || undefined,
         website_url: promoForm.website_url || undefined,
+        document_url: promoForm.document_url || undefined,
         active: true
       });
 
@@ -146,7 +151,7 @@ const Admin = () => {
         description: "Le code promo a été ajouté avec succès.",
       });
       
-      setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "" });
+      setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "", document_url: "" });
       loadData(); // Recharger les données
     } catch (error) {
       toast({
@@ -163,6 +168,12 @@ const Admin = () => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) return;
 
     try {
+      // Trouver l'article pour récupérer l'URL du document
+      const article = articles.find(a => a.id === id);
+      if (article?.document_url) {
+        await deleteFileFromStorage(article.document_url);
+      }
+
       await deleteArticle(id);
       toast({
         title: "Article supprimé",
@@ -182,6 +193,12 @@ const Admin = () => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer ce code promo ?")) return;
 
     try {
+      // Trouver la promo pour récupérer l'URL du document
+      const promo = promos.find(p => p.id === id);
+      if (promo?.document_url) {
+        await deleteFileFromStorage(promo.document_url);
+      }
+
       await deletePromo(id);
       toast({
         title: "Code promo supprimé",
@@ -206,7 +223,8 @@ const Admin = () => {
       category: article.category,
       author: article.author,
       image_url: article.image_url || "",
-      article_url: article.article_url || ""
+      article_url: article.article_url || "",
+      document_url: article.document_url || ""
     });
     setActiveTab("articles");
   };
@@ -222,7 +240,8 @@ const Admin = () => {
       partner: promo.partner,
       category: promo.category,
       image_url: promo.image_url || "",
-      website_url: promo.website_url || ""
+      website_url: promo.website_url || "",
+      document_url: promo.document_url || ""
     });
     setActiveTab("promos");
   };
@@ -230,8 +249,8 @@ const Admin = () => {
   const handleCancelEdit = () => {
     setEditingArticle(null);
     setEditingPromo(null);
-    setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "" });
-    setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "" });
+    setArticleForm({ title: "", content: "", category: "", author: "", image_url: "", article_url: "", document_url: "" });
+    setPromoForm({ title: "", description: "", code: "", discount: "", valid_until: "", partner: "", category: "", image_url: "", website_url: "", document_url: "" });
   };
 
   const handleUpdateArticle = async (e: React.FormEvent) => {
@@ -241,13 +260,19 @@ const Admin = () => {
     setLoading(true);
 
     try {
+      // Si le document a changé, supprimer l'ancien fichier
+      if (editingArticle.document_url && editingArticle.document_url !== articleForm.document_url) {
+        await deleteFileFromStorage(editingArticle.document_url);
+      }
+
       await updateArticle(editingArticle.id, {
         title: articleForm.title,
         content: articleForm.content,
         category: articleForm.category,
         author: articleForm.author,
         image_url: articleForm.image_url || undefined,
-        article_url: articleForm.article_url || undefined
+        article_url: articleForm.article_url || undefined,
+        document_url: articleForm.document_url || undefined
       });
 
       toast({
@@ -275,6 +300,11 @@ const Admin = () => {
     setLoading(true);
 
     try {
+      // Si le document a changé, supprimer l'ancien fichier
+      if (editingPromo.document_url && editingPromo.document_url !== promoForm.document_url) {
+        await deleteFileFromStorage(editingPromo.document_url);
+      }
+
       await updatePromo(editingPromo.id, {
         title: promoForm.title,
         description: promoForm.description,
@@ -284,7 +314,8 @@ const Admin = () => {
         partner: promoForm.partner,
         category: promoForm.category,
         image_url: promoForm.image_url || undefined,
-        website_url: promoForm.website_url || undefined
+        website_url: promoForm.website_url || undefined,
+        document_url: promoForm.document_url || undefined
       });
 
       toast({
@@ -411,6 +442,16 @@ const Admin = () => {
                       <p className="text-xs text-muted-foreground">
                         Le protocole https:// sera ajouté automatiquement si absent
                       </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <FileUpload
+                        onFileUploaded={(url) => setArticleForm({ ...articleForm, document_url: url })}
+                        onFileRemoved={() => setArticleForm({ ...articleForm, document_url: "" })}
+                        currentFile={articleForm.document_url}
+                        accept=".pdf"
+                        maxSize={10}
+                      />
                     </div>
                   </div>
 
@@ -541,6 +582,16 @@ const Admin = () => {
                       <p className="text-xs text-muted-foreground">
                         Le protocole https:// sera ajouté automatiquement si absent
                       </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <FileUpload
+                        onFileUploaded={(url) => setPromoForm({ ...promoForm, document_url: url })}
+                        onFileRemoved={() => setPromoForm({ ...promoForm, document_url: "" })}
+                        currentFile={promoForm.document_url}
+                        accept=".pdf"
+                        maxSize={10}
+                      />
                     </div>
                   </div>
 

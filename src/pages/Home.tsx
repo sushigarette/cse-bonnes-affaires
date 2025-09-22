@@ -103,6 +103,7 @@ const Home = () => {
                   category={article.category}
                   image={article.image_url || "/placeholder.svg"}
                   articleUrl={article.article_url}
+                  documentUrl={article.document_url}
                   onRead={() => console.log('Lire article:', article.title)}
                 />
               ))
@@ -145,6 +146,7 @@ const Home = () => {
                   category={promo.category}
                   image={promo.image_url || "/placeholder.svg"}
                   websiteUrl={promo.website_url}
+                  documentUrl={promo.document_url}
                   onRead={() => console.log('Lire promo:', promo.title)}
                 />
               ))

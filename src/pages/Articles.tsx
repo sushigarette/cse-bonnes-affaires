@@ -113,6 +113,7 @@ const Articles = () => {
                 category={article.category}
                 image={article.image_url || "/placeholder.svg"}
                 articleUrl={article.article_url}
+                documentUrl={article.document_url}
                 onRead={() => console.log('Lire article:', article.title)}
               />
             ))

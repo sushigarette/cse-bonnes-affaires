@@ -8,6 +8,7 @@ export interface Article {
   author: string
   image_url?: string
   article_url?: string
+  document_url?: string
   published: boolean
   created_at: string
   updated_at: string
@@ -26,6 +27,7 @@ export interface Promo {
   category: string
   image_url?: string
   website_url?: string
+  document_url?: string
   active: boolean
   created_at: string
   updated_at: string
@@ -241,4 +243,25 @@ export const recordPromoUsage = async (promoId: string) => {
     .insert({ promo_id: promoId })
 
   if (error) console.error('Erreur lors de l\'enregistrement de l\'utilisation:', error)
+}
+
+// Gestion des fichiers
+export const deleteFileFromStorage = async (fileUrl: string) => {
+  try {
+    // Extraire le chemin du fichier depuis l'URL
+    const url = new URL(fileUrl);
+    const pathParts = url.pathname.split('/');
+    const filePath = pathParts.slice(-2).join('/'); // documents/filename.pdf
+
+    // Supprimer le fichier du storage
+    const { error } = await supabase.storage
+      .from('documents')
+      .remove([filePath]);
+
+    if (error) {
+      console.error('Erreur lors de la suppression du fichier:', error);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la suppression du fichier:', error);
+  }
 }

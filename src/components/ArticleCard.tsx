@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Eye, User, ExternalLink } from "lucide-react";
+import { Calendar, Eye, User, ExternalLink, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { formatTextWithLineBreaks } from "@/lib/utils";
@@ -15,6 +15,7 @@ interface ArticleCardProps {
   category: string;
   image?: string;
   articleUrl?: string;
+  documentUrl?: string;
   onRead?: () => void;
 }
 
@@ -27,6 +28,7 @@ const ArticleCard = ({
   category,
   image,
   articleUrl,
+  documentUrl,
   onRead
 }: ArticleCardProps) => {
   const navigate = useNavigate();
@@ -50,6 +52,22 @@ const ArticleCard = ({
       toast({
         title: "Lien non disponible",
         description: "Aucun lien externe n'est disponible pour cet article.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleOpenDocument = () => {
+    if (documentUrl) {
+      let url = documentUrl.trim();
+      if (!url.match(/^https?:\/\//)) {
+        url = `https://${url}`;
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: "Document non disponible",
+        description: "Aucun document n'est disponible pour cet article.",
         variant: "destructive"
       });
     }
@@ -116,6 +134,18 @@ const ArticleCard = ({
             >
               <ExternalLink className="w-4 h-4 mr-1" />
               Consulter
+            </Button>
+          )}
+
+          {documentUrl && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleOpenDocument}
+              className="text-primary hover:text-primary-foreground hover:bg-primary"
+            >
+              <FileText className="w-4 h-4 mr-1" />
+              Document
             </Button>
           )}
         </div>

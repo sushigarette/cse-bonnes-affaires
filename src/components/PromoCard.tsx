@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Clock, Eye } from "lucide-react";
+import { Copy, ExternalLink, Clock, Eye, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDiscount } from "@/lib/formatDiscount";
 import { formatTextWithLineBreaks } from "@/lib/utils";
@@ -18,6 +18,7 @@ interface PromoCardProps {
   category: string;
   image?: string;
   websiteUrl?: string;
+  documentUrl?: string;
   onRead?: () => void;
 }
 
@@ -32,6 +33,7 @@ const PromoCard = ({
   category,
   image,
   websiteUrl,
+  documentUrl,
   onRead
 }: PromoCardProps) => {
   const navigate = useNavigate();
@@ -75,6 +77,22 @@ const PromoCard = ({
       toast({
         title: "Lien non disponible",
         description: "Aucun lien vers le site partenaire n'est disponible pour ce code promo.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleOpenDocument = () => {
+    if (documentUrl) {
+      let url = documentUrl.trim();
+      if (!url.match(/^https?:\/\//)) {
+        url = `https://${url}`;
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: "Document non disponible",
+        description: "Aucun document n'est disponible pour ce code promo.",
         variant: "destructive"
       });
     }
@@ -187,6 +205,18 @@ const PromoCard = ({
             <ExternalLink className="w-4 h-4 mr-1" />
             Consulter
           </Button>
+
+          {documentUrl && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleOpenDocument}
+              className="text-primary hover:text-primary-foreground hover:bg-primary"
+            >
+              <FileText className="w-4 h-4 mr-1" />
+              Document
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>

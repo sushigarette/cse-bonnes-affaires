@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ExternalLink, Copy, Clock, Percent, Calendar, Building2, Tag } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Clock, Percent, Calendar, Building2, Tag, FileText } from "lucide-react";
 import { getPromoById, Promo, recordPromoUsage } from "@/lib/database";
 import { formatDiscount } from "@/lib/formatDiscount";
 import { formatTextWithLineBreaks } from "@/lib/utils";
@@ -248,6 +248,42 @@ const PromoDetail = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Document associé */}
+        {promo.document_url && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Document associé
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-primary" />
+                  <div>
+                    <p className="font-medium">Document PDF</p>
+                    <p className="text-sm text-muted-foreground">Cliquez pour ouvrir le document</p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    let url = promo.document_url!.trim();
+                    if (!url.match(/^https?:\/\//)) {
+                      url = `https://${url}`;
+                    }
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Ouvrir
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
