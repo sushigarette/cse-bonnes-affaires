@@ -1,11 +1,13 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy, ExternalLink, Clock } from "lucide-react";
+import { Copy, ExternalLink, Clock, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDiscount } from "@/lib/formatDiscount";
+import { useNavigate } from "react-router-dom";
 
 interface PromoCardProps {
+  id: string;
   title: string;
   description: string;
   code: string;
@@ -15,9 +17,11 @@ interface PromoCardProps {
   category: string;
   image?: string;
   websiteUrl?: string;
+  onRead?: () => void;
 }
 
 const PromoCard = ({
+  id,
   title,
   description,
   code,
@@ -26,8 +30,10 @@ const PromoCard = ({
   partner,
   category,
   image,
-  websiteUrl
+  websiteUrl,
+  onRead
 }: PromoCardProps) => {
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Vérifier si le code promo se termine dans moins de 24 heures
@@ -45,6 +51,13 @@ const PromoCard = ({
       title: "Code copié !",
       description: `Le code ${code} a été copié dans le presse-papiers.`,
     });
+  };
+
+  const handleRead = () => {
+    if (onRead) {
+      onRead();
+    }
+    navigate(`/promos/${id}`);
   };
 
   const handleUsePromo = () => {
@@ -152,16 +165,28 @@ const PromoCard = ({
           {isExpiringSoon() ? '⚠️ Expire bientôt - ' : ''}Valide jusqu'au {validUntil}
         </div>
         
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={handleUsePromo}
-          className="text-primary hover:text-primary-foreground hover:bg-primary"
-          disabled={!websiteUrl}
-        >
-          <ExternalLink className="w-4 h-4 mr-1" />
-          Utiliser
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleRead}
+            className="text-primary hover:text-primary-foreground hover:bg-primary"
+          >
+            <Eye className="w-4 h-4 mr-1" />
+            Lire
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={handleUsePromo}
+            className="text-primary hover:text-primary-foreground hover:bg-primary"
+            disabled={!websiteUrl}
+          >
+            <ExternalLink className="w-4 h-4 mr-1" />
+            Consulter
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

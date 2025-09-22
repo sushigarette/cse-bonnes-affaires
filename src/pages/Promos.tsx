@@ -111,6 +111,7 @@ const Promos = () => {
             filteredPromos.map((promo) => (
               <PromoCard
                 key={promo.id}
+                id={promo.id}
                 title={promo.title}
                 description={promo.description}
                 code={promo.code}
@@ -120,6 +121,7 @@ const Promos = () => {
                 category={promo.category}
                 image={promo.image_url || "/placeholder.svg"}
                 websiteUrl={promo.website_url}
+                onRead={() => console.log('Lire promo:', promo.title)}
               />
             ))
           )}
