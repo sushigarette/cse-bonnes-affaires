@@ -101,7 +101,7 @@ const ArticleCard = ({
 
       <CardContent className="pb-4">
         <div 
-          className="text-muted-foreground line-clamp-3 text-sm leading-relaxed prose prose-sm max-w-none"
+          className="text-muted-foreground line-clamp-3 text-sm leading-relaxed prose prose-sm max-w-none content-paragraphs"
           dangerouslySetInnerHTML={{ 
             __html: formatTextWithLineBreaks(content.replace(/<[^>]*>/g, '').substring(0, 150) + '...')
           }}

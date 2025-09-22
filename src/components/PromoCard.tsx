@@ -140,7 +140,7 @@ const PromoCard = ({
 
       <CardContent className="pb-4">
         <div 
-          className="text-muted-foreground line-clamp-2 text-sm leading-relaxed mb-3 prose prose-sm max-w-none"
+          className="text-muted-foreground line-clamp-2 text-sm leading-relaxed mb-3 prose prose-sm max-w-none content-paragraphs"
           dangerouslySetInnerHTML={{ 
             __html: formatTextWithLineBreaks(description)
           }}

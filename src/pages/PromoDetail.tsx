@@ -167,7 +167,7 @@ const PromoDetail = () => {
             <div className="prose prose-lg max-w-none">
               <h3 className="text-xl font-semibold mb-3">Description de l'offre</h3>
               <div 
-                className="text-foreground leading-relaxed"
+                className="text-foreground leading-relaxed prose prose-lg max-w-none content-paragraphs"
                 dangerouslySetInnerHTML={{ 
                   __html: formatTextWithLineBreaks(promo.description)
                 }}

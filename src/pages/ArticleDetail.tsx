@@ -121,7 +121,7 @@ const ArticleDetail = () => {
             )}
             
             <div 
-              className="text-foreground leading-relaxed prose prose-lg max-w-none"
+              className="text-foreground leading-relaxed prose prose-lg max-w-none content-paragraphs"
               dangerouslySetInnerHTML={{ 
                 __html: formatTextWithLineBreaks(article.content)
               }}
