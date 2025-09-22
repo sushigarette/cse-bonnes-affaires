@@ -13,6 +13,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, loading } = useAuth()
 
+  // Afficher le loader pendant le chargement de l'authentification
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">

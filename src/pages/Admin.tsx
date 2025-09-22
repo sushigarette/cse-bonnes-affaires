@@ -18,7 +18,8 @@ import FileUpload from "@/components/FileUpload";
 const Admin = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("articles");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Commencer en mode chargement
+  const [initialLoad, setInitialLoad] = useState(true); // État pour le chargement initial
   const [articles, setArticles] = useState<Article[]>([]);
   const [promos, setPromos] = useState<Promo[]>([]);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
@@ -83,13 +84,15 @@ const Admin = () => {
         return combined.sort();
       });
     } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les données",
+        description: "Impossible de charger les données. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
@@ -356,11 +359,35 @@ const Admin = () => {
   };
 
 
+  // Afficher un écran de chargement pendant le chargement initial
+  if (initialLoad) {
+    return (
+      <ProtectedRoute requireAdmin={true}>
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Card className="w-96">
+            <CardHeader className="text-center">
+              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              </div>
+              <CardTitle>Chargement de l'administration</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-muted-foreground">Récupération des données...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
   return (
     <ProtectedRoute requireAdmin={true}>
       <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Administration</h1>
+          <p className="text-muted-foreground">Gérez les articles et codes promo</p>
+        </div>
 
         {/* Forms */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

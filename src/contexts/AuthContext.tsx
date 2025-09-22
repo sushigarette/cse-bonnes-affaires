@@ -27,23 +27,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     // Récupérer la session actuelle
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (isMounted) {
+          if (error) {
+            console.error('Erreur lors de la récupération de la session:', error)
+          }
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération de la session:', error)
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    getInitialSession()
 
     // Écouter les changements d'authentification
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      if (isMounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signUp = async (email: string, password: string, userData: { first_name: string; last_name: string }) => {
