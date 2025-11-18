@@ -1,4 +1,4 @@
-#!/bin/bash
+d#!/bin/bash
 
 # Script de déploiement CSE Bonnes Affaires sur Raspberry Pi
 # Intégration avec mhcerts existant
@@ -13,8 +13,8 @@ echo "=================================================="
 # Configuration
 APP_NAME="cse-bonnes-affaires"
 APP_PORT="3002"
-APP_DIR="/home/pi/$APP_NAME"
-SERVICE_NAME="cse-bonnes-affaires"
+APP_DIR="/var/www/mhcse"
+SERVICE_NAME="mhcse"
 REPO_URL="https://github.com/sushigarette/cse-bonnes-affaires.git"
 
 # Couleurs
@@ -77,6 +77,8 @@ log_step "2. Préparation du code source"
 if [ -d "$APP_DIR" ]; then
     log_info "Mise à jour du repository existant..."
     cd "$APP_DIR"
+    # Résoudre le problème de permissions Git si nécessaire
+    git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
     git pull origin main
 else
     log_info "Clonage du repository..."
@@ -159,6 +161,8 @@ EOF
 log_step "7. Configuration du service systemd"
 
 log_info "Création du service systemd..."
+# Détecter l'utilisateur actuel
+CURRENT_USER=$(whoami)
 sudo tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null <<EOF
 [Unit]
 Description=CSE Bonnes Affaires
@@ -166,7 +170,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=pi
+User=$CURRENT_USER
 WorkingDirectory=$APP_DIR
 ExecStart=/usr/bin/node server.js
 Restart=always
