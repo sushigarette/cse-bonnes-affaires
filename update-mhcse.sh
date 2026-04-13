@@ -62,12 +62,9 @@ else
     exit 1
 fi
 
-# Vérifier s'il y a eu des changements
 NEW_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
 if [ "$CURRENT_COMMIT" = "$NEW_COMMIT" ] && [ "$CURRENT_COMMIT" != "unknown" ]; then
-    log_warn "⚠️  Aucune nouvelle modification détectée"
-    echo "   L'application est déjà à jour."
-    exit 0
+    log_warn "⚠️  Déjà sur le dernier commit — on régénère dist quand même (corrige un index.html avec mauvaise base URL)."
 fi
 
 # 5. Installer les nouvelles dépendances
@@ -90,8 +87,15 @@ if [ -f "build-raspberry.sh" ]; then
     chmod +x build-raspberry.sh
     ./build-raspberry.sh
 else
-    log_info "Build standard avec npm..."
-    npm run build
+    log_info "Préparation config Raspberry + build avec base /mhcse/..."
+    [ -f "vite.config.raspberry.ts" ] && cp vite.config.raspberry.ts vite.config.ts
+    [ -f "src/App.raspberry.tsx" ] && cp src/App.raspberry.tsx src/App.tsx
+    if grep -q '"build:raspberry"' package.json; then
+        npm run build:raspberry
+    else
+        log_warn "package.json sans build:raspberry — npm run build (vérifiez base /mhcse/)"
+        npm run build
+    fi
 fi
 
 if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
