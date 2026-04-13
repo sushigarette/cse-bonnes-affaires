@@ -121,9 +121,6 @@ log_step "3. Installation des dépendances"
 log_info "Installation des dépendances Node.js..."
 npm install
 
-log_info "Installation d'Express pour le serveur..."
-npm install express
-
 # 4. Configuration Vite pour le sous-chemin
 log_step "4. Configuration de l'application"
 
@@ -165,40 +162,9 @@ log_step "5. Build de l'application"
 log_info "Build de l'application (base forcée /mhcse/ pour éviter les URLs http://IP dans index.html)..."
 npm run build:raspberry
 
-# 6. Créer le serveur Express
+# 6. Serveur de prod : server.cjs versionné (CommonJS, compatible avec "type": "module")
 log_step "6. Configuration du serveur"
-
-log_info "Création du serveur Express..."
-cat > server.js << 'EOF'
-const express = require('express');
-const path = require('path');
-const app = express();
-const PORT = process.env.PORT || 3002;
-
-// Servir les fichiers statiques
-app.use('/mhcse', express.static(path.join(__dirname, 'dist')));
-
-// Route pour toutes les pages SPA (avec base path /mhcse/)
-app.get('/mhcse/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-// Route de santé
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    service: 'cse-bonnes-affaires', 
-    port: PORT,
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 mhcse démarré sur le port ${PORT}`);
-  console.log(`📁 Fichiers statiques servis sur /mhcse/`);
-  console.log(`🏥 Santé: http://localhost:${PORT}/health`);
-});
-EOF
+log_info "Le dépôt fournit server.cjs + express dans package.json — rien à générer."
 
 # 7. Configuration du service systemd
 log_step "7. Configuration du service systemd"
@@ -215,7 +181,7 @@ After=network.target
 Type=simple
 User=$CURRENT_USER
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node server.cjs
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production

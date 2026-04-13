@@ -65,7 +65,6 @@ fi
 # 4. Installation des dépendances
 log_info "Installation des dépendances..."
 npm install
-npm install express
 
 # 5. Configuration Vite pour le sous-chemin
 log_info "Configuration de Vite pour le sous-chemin /cse/..."
@@ -90,32 +89,7 @@ EOF
 log_info "Build de l'application..."
 npm run build
 
-# 7. Créer le serveur Express
-log_info "Création du serveur Express..."
-cat > server.js << 'EOF'
-const express = require('express');
-const path = require('path');
-const app = express();
-const PORT = process.env.PORT || 3002;
-
-// Servir les fichiers statiques
-app.use('/cse', express.static(path.join(__dirname, 'dist')));
-
-// Route pour toutes les pages SPA (avec base path /cse/)
-app.get('/cse/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-// Route de santé
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'cse-bonnes-affaires', port: PORT });
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 CSE Bonnes Affaires démarré sur le port ${PORT}`);
-  console.log(`📁 Fichiers statiques servis sur /cse/`);
-});
-EOF
+# 7. Serveur : server.cjs du dépôt + APP_BASE_PATH=/cse
 
 # 8. Configuration du service systemd
 log_info "Configuration du service systemd..."
@@ -128,11 +102,12 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/node server.js
+ExecStart=/usr/bin/node server.cjs
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
 Environment=PORT=$APP_PORT
+Environment=APP_BASE_PATH=/cse
 
 [Install]
 WantedBy=multi-user.target
