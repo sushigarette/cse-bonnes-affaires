@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:raspberry": "vite build --base /mhcse/",
+    "build:raspberry": "vite build --base /mhcse/ && node scripts/verify-dist-index.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
