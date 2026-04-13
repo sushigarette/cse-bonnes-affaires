@@ -7,8 +7,8 @@ echo "🚀 Building for Raspberry Pi deployment..."
 cp vite.config.raspberry.ts vite.config.ts
 cp src/App.raspberry.tsx src/App.tsx
 
-# Build l'application
-npm run build
+# Build l'application (--base /mhcse/ évite d'embarquer http://192.168.x.x dans les assets)
+npm run build:raspberry
 
 echo "✅ Build completed for Raspberry Pi!"
 echo "📁 Files are ready in ./dist/"

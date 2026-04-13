@@ -1,4 +1,4 @@
-d#!/bin/bash
+#!/bin/bash
 
 # Script de déploiement CSE Bonnes Affaires sur Raspberry Pi
 # Intégration avec mhcerts existant
@@ -76,10 +76,39 @@ log_step "2. Préparation du code source"
 
 if [ -d "$APP_DIR" ]; then
     log_info "Mise à jour du repository existant..."
+    
+    # Corriger les permissions si nécessaire
+    CURRENT_USER=$(whoami)
+    log_info "Vérification des permissions pour l'utilisateur $CURRENT_USER..."
+    if [ ! -w "$APP_DIR/.git" ]; then
+        log_warn "Permissions insuffisantes, correction en cours..."
+        sudo chown -R $CURRENT_USER:$CURRENT_USER "$APP_DIR"
+        sudo chmod -R u+w "$APP_DIR/.git" 2>/dev/null || true
+    fi
+    
     cd "$APP_DIR"
     # Résoudre le problème de permissions Git si nécessaire
     git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
-    git pull origin main
+    
+    # Vérifier s'il y a des modifications locales non commitées
+    if ! git diff-index --quiet HEAD --; then
+        log_warn "Modifications locales détectées, sauvegarde avant mise à jour..."
+        git stash push -m "Sauvegarde automatique avant mise à jour $(date +%Y%m%d_%H%M%S)"
+        log_info "✅ Modifications locales sauvegardées (stash)"
+    fi
+    
+    # Faire le pull
+    if git pull origin main; then
+        log_info "✅ Mise à jour réussie"
+    else
+        log_error "❌ Erreur lors de la mise à jour"
+        # Restaurer les modifications si le pull échoue
+        if git stash list | grep -q "Sauvegarde automatique"; then
+            log_info "Restauration des modifications locales..."
+            git stash pop
+        fi
+        exit 1
+    fi
 else
     log_info "Clonage du repository..."
     git clone "$REPO_URL" "$APP_DIR"
@@ -98,16 +127,22 @@ npm install express
 # 4. Configuration Vite pour le sous-chemin
 log_step "4. Configuration de l'application"
 
-log_info "Configuration de Vite pour le sous-chemin /cse/..."
-cat > vite.config.ts << 'EOF'
+log_info "Configuration de Vite pour le sous-chemin /mhcse/..."
+# Utiliser la configuration Raspberry si elle existe, sinon créer une nouvelle
+if [ -f "vite.config.raspberry.ts" ]; then
+    log_info "Utilisation de vite.config.raspberry.ts..."
+    cp vite.config.raspberry.ts vite.config.ts
+else
+    log_info "Création de vite.config.ts avec base /mhcse/..."
+    cat > vite.config.ts << 'EOF'
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/cse/',
+  base: '/mhcse/',
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -115,12 +150,20 @@ export default defineConfig({
   },
 })
 EOF
+fi
+
+# Copier App.raspberry.tsx vers App.tsx pour le routage correct
+if [ -f "src/App.raspberry.tsx" ]; then
+    log_info "Utilisation de App.raspberry.tsx pour le routage..."
+    cp src/App.raspberry.tsx src/App.tsx
+    log_info "✅ App.tsx mis à jour avec basename /mhcse"
+fi
 
 # 5. Build de l'application
 log_step "5. Build de l'application"
 
-log_info "Build de l'application..."
-npm run build
+log_info "Build de l'application (base forcée /mhcse/ pour éviter les URLs http://IP dans index.html)..."
+npm run build:raspberry
 
 # 6. Créer le serveur Express
 log_step "6. Configuration du serveur"
@@ -133,10 +176,10 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 
 // Servir les fichiers statiques
-app.use('/cse', express.static(path.join(__dirname, 'dist')));
+app.use('/mhcse', express.static(path.join(__dirname, 'dist')));
 
-// Route pour toutes les pages SPA (avec base path /cse/)
-app.get('/cse/*', (req, res) => {
+// Route pour toutes les pages SPA (avec base path /mhcse/)
+app.get('/mhcse/*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
@@ -151,8 +194,8 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 CSE Bonnes Affaires démarré sur le port ${PORT}`);
-  console.log(`📁 Fichiers statiques servis sur /cse/`);
+  console.log(`🚀 mhcse démarré sur le port ${PORT}`);
+  console.log(`📁 Fichiers statiques servis sur /mhcse/`);
   console.log(`🏥 Santé: http://localhost:${PORT}/health`);
 });
 EOF
@@ -209,18 +252,18 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
     
-    # CSE Bonnes Affaires (proxy vers Node.js)
-    location /cse/ {
-        proxy_pass http://localhost:$APP_PORT/cse/;
+    # mhcse (proxy vers Node.js)
+    location /mhcse/ {
+        proxy_pass http://localhost:$APP_PORT/mhcse/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Forwarded-Prefix /cse;
+        proxy_set_header X-Forwarded-Prefix /mhcse;
     }
     
-    # Santé CSE Bonnes Affaires
-    location /cse-health {
+    # Santé mhcse
+    location /mhcse-health {
         proxy_pass http://localhost:$APP_PORT/health;
         proxy_set_header Host \$host;
     }
@@ -279,8 +322,8 @@ echo "🎉 Déploiement réussi !"
 echo ""
 echo "📋 Informations de connexion:"
 echo "   - mhcerts: http://$(hostname -I | awk '{print $1}')/"
-echo "   - CSE Bonnes Affaires: http://$(hostname -I | awk '{print $1}')/cse/"
-echo "   - Santé CSE: http://$(hostname -I | awk '{print $1}')/cse-health"
+echo "   - MHCSE: http://$(hostname -I | awk '{print $1}')/mhcse/"
+echo "   - Santé MHCSE: http://$(hostname -I | awk '{print $1}')/mhcse-health"
 echo ""
 echo "🔧 Commandes utiles:"
 echo "   - Status: sudo systemctl status $SERVICE_NAME"
@@ -295,4 +338,4 @@ echo "   - Nginx: /etc/nginx/sites-available/mhcerts"
 echo "   - Backup: /etc/nginx/sites-available/mhcerts.backup.*"
 echo ""
 echo "🔄 Pour mettre à jour:"
-echo "   cd $APP_DIR && git pull origin main && npm run build && sudo systemctl restart $SERVICE_NAME"
+echo "   cd $APP_DIR && git pull origin main && npm run build:raspberry && sudo systemctl restart $SERVICE_NAME"
